@@ -1,0 +1,35 @@
+<menu call-menu="#spot2" ng-include src="'pages/menu.html'"></menu>
+<div id="spot2" class="secFull">
+	<div class="videoBox"> 
+		<h1>In The Spotlight</h1>
+		<hr />
+		<div ng-repeat="vid in videos" id="{{vid.id}}">
+			<h2>Spotlight: {{vid.name}}</h2>
+			<h3>{{vid.date}}</h3>
+			<div class="video">
+				<iframe ng-src="{{trustSrc(vid.link)}}" id="vidFrame" frameborder="0" allowfullscreen></iframe>
+			</div>
+			<h3>{{vid.caption}}</h3>
+			<hr />
+		</div>
+		<h3 ng-show="hasMorePosts()"><a ng-click="morePosts()">See More Posts</a></h3>
+	</div>
+	<div class="videoMenu" fixed-scroll="100">
+		<form>
+			<h2>Submit Video/Highlights</h2>
+			<input type="text" placeholder="URL" />
+			<input type="submit" />
+		</form>
+		<hr />
+		<div id="videoMenu2">
+			<h2>Quick Links</h2>
+			<h3 ng-repeat="vid in videos | limitTo: vidCount"><a page-scroll="#{{vid.id}}">{{vid.name}} ({{vid.date}})</a><h3>
+		</div>
+		<hr />
+		<div id="videoMenu3">
+			<h2>Youtube Channel</h2>
+			<h3><a>Go to Channel</a></h3>
+		</div>
+	</div>
+</div>
+		

@@ -1,0 +1,14 @@
+{
+    "applications": {
+        "Fanalytik": {
+            "applicationId": "6BDeNGgmLDMe8UOcmWjIXxSjGJnjjdV6rxbA6NOn", 
+            "masterKey": "JOO1jyAL1qUrckaRmIx2GiiUkk26c2sjiOSN2Z9B"
+        }, 
+        "_default": {
+            "link": "Fanalytik"
+        }
+    }, 
+    "global": {
+        "parseVersion": "1.2.18"
+    }
+}

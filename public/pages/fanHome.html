@@ -1,0 +1,39 @@
+<menu call-menu="#home3" ng-include src="'pages/menu.html'"></menu>
+<div id="home1" class="slider">
+	<a class="arrows" id="leftArrow" ng-click="prevSlide()"><img src="/images/thinLeft_white.png" alt="left_arrow" /></a>
+    <a class="arrows" id="rightArrow" ng-click="nextSlide()"><img src="/images/thinRight_white.png" alt="right_arrow" /></a>
+    <div class="logo">
+    	<h1>Fanalytik</h1>
+    </div>
+    <div class="slideRadioBox">
+    	<div class="slideRadio clickable" ng-repeat="s in slides" ng-click="goSlide($index+1)" ng-class="{current: slideIdx == $index+1}"></div>
+    </div>
+    <div class="socialBox">
+		<a href="http://www.twitter.com/fanalytik" target="_blank"><img class="socialLinks" src="/images/twitter.png" alt="Twitter" /></a>
+		<a href="/blog"><img class="socialLinks" src="/images/wordpress.png" alt="Twitter" /></a>
+		<a href="/blog/contact/"><img class="socialLinks" src="/images/envelope.png" alt="Contact" /></a>
+	</div>
+    <div ng-repeat="slide in slides" id="slide{{slide.index}}" class="clickable slide" ng-show="slideIdx == $index+1" ng-click="sliderGo()">
+        <div class="slideText" id="slideText1">
+            <h2>{{slide.header}}</h2>
+            <hr />
+            <h3>{{slide.text}}</h3>
+        </div>
+    </div>
+</div>
+<div id="home2" class="secFull">
+	<h2>Latest in Sports</h2>
+	<hr />
+	<h3 id="headline">{{headline}}</h3>
+</div>
+<div id="home3" class="secFull">
+	<h2>Recent Articles</h2>
+	<hr />
+	<div class="infoSquare clickable" ng-repeat="article in articles" go-link="{{article.link}}">
+		<h2>{{article.title}}</h2>
+		<h3>{{article.date}}</h3>
+		<hr />
+		<img src="{{article.image}}" alt="img{{article.title}}" />
+		<p>{{article.blurb}}</p>
+	</div>
+</div>
