@@ -1,0 +1,66 @@
+<menu ng-include src="'pages/menu.html'"></menu>
+<div id="rant1" class="page">
+	<h1>Fan Talk</h1>
+	<hr />
+	<div>Choose Topic: <select ng-model="forum.title">
+		<option ng-repeat="topic in topics track by $index" value="{{topic.title}}">{{topic.title}}</option>
+	</select></div>
+	<h3>- OR - </h3>
+	<div>
+		<button ng-click="showTopicForm = true">Create New Topic</button>
+		<hr />
+		<form name="topicForm" ng-show="showTopicForm" novalidate>
+			<div class="form-input">
+				<input type="text" ng-model="post.name" placeholder="First Name">
+			</div>
+			<div class="form-input">
+				State: <select ng-model="post.state">
+					<optgroup label="Choose State">
+					<option ng-repeat="s in states" value="{{s.name}}">{{s.abbreviation}}</option>
+					</optgroup>
+				</select>
+			</div>
+			<div class="form-input">
+				Twitter Handle: <input type="text" ng-model="post.twitter" placeholder="i.e - @Fanalytik"><em>(optional)</em>
+			</div>
+			<div class="form-input">
+				<h3>Message</h3>
+				<input type="text" ng-model="topic.title" placeholder="Enter Topic Name">
+			</div>
+			<div class="form-input">
+				<textarea rows="8" cols="50" name="message" required ng-model="topic.message" placeholder="Enter Message Here"></textarea>
+			</div>
+			<div class="form-input">
+				<input type="submit" value="Submit">
+			</div>
+		</form>
+	</div>
+</div>
+<div id="rant2" class="page">
+	<h2>Join a discussion!</h2>
+	<div class="switch-wrap col-md-5 col-sm-8 col-xs-10">
+		<div class="label col-md-5 col-sm-5 col-xs-5 clickable" ng-click="showArticles = false">Rants</div>
+		<div class="switch col-md-2 col-sm-2 col-xs-2 clickable" ng-click="showArticles = !showArticles">
+			<div class="switch-btn" ng-class="{left: !showArticles, right: showArticles}"></div>
+		</div>
+		<div class="label col-md-5 col-sm-5 col-xs-5 clickable" ng-click="showArticles = true">Articles</div>
+	</div>
+	<div class="board rant-board" ng-show="!showArticles">
+		<div class="col col-md-4" ng-repeat="rant in rants">
+			<a ng-click="selectedRant = rant"><div class="box">
+				<h3>{{rant.title}}</h3>
+				<p>{{rant.team}}</p>
+				<p>{{rant.post}}</p>
+			</div></a>
+		</div>
+	</div>
+	<div class="board article-board" ng-show="showArticles">
+		<div class="col col-md-4" ng-repeat="article in articles">
+			<a ng-href="{{article.link}}"><div class="box">
+				<h3>{{article.title}}</h3>
+				<p>{{article.date}}</p>
+				<p><span class="disqus-comment-count" data-disqus-url="{{longUrl}}"></span></p>
+			</div></a>
+		</div>
+	</div>
+</div>

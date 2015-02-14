@@ -1,4 +1,4 @@
-var fanApp = angular.module('fanApp', ['ngRoute', 'ngAnimate']);
+var fanApp = angular.module('fanApp', ['ngRoute', 'ngAnimate', 'ngSanitize']);
 
 var manMail = new mandrill.Mandrill('rYwkbK4FxF85oX2tkVihXQ');
 
@@ -9,70 +9,68 @@ fanApp.config(function($routeProvider) {
         .when('/', {
                 templateUrl: 'pages/splash.html',
                 controller  : 'splashController',
-                bodyStyle: 'light',
-                bodyBG: 1,
-                bodyRepeat: 'no-repeat'
+                bodyClass: 'splash',
+                pageIdx: 0
         })
 
         .when('/home', {
                 templateUrl : 'pages/fanHome.html',
                 controller  : 'homeController',
-                bodyStyle: 'light',
-                bodyBG: 1,
-                bodyRepeat: 'repeat',
-                callMenu: '#home3'
+                bodyClass: 'home',
+                pageIdx: 1
+  
         })
 
         .when('/spotlight', {
-            templateUrl: 'pages/spotlight.html',
-            controller: 'spotController',
-            bodyStyle: 'dark',
-            bodyBG: 1,
-            bodyRepeat: 'no-repeat',
-            callMenu: '#spot2'
+                templateUrl: 'pages/spotlight.html',
+                controller: 'spotController',
+                bodyClass: 'spotlight',
+                pageIdx: 2
+        })
+
+        .when('/spotlight/:idx?', {
+                templateUrl: 'pages/spotlight.html',
+                controller: 'spotController',
+                bodyClass: 'spotlight',
+                pageIdx: 2
+        })
+
+        .when('/spotlight/id/:id?', {
+                templateUrl: 'pages/spotlight.html',
+                controller: 'spotController',
+                bodyClass: 'spotlight',
+                pageIdx: 2
+        })        
+
+        .when('/talk', {
+                templateUrl: 'pages/fanTalk.html',
+                controller: 'talkController',
+                bodyClass: 'talk',
+                pageIdx: 3
+        })
+
+        .when('/talk/:id?', {
+                templateUrl: 'pages/fanTalk.html',
+                controller: 'talkController',
+                bodyClass: 'talk',
+                pageIdx: 3
         })
 
         .otherwise({redirectTo: '/home'});
 });
 
-fanApp.run( ['$rootScope', '$routeParams', '$location', '$route', function($scope, $routeParams, $location, $route) {
-    
-    var darkBG = ['#484848', 'url(/images/gradient_blue.jpg)', 'url(/images/football_field2_1300.jpg)', 'url(/images/neutral_green.png)', 'url(/images/green_leather.png)', 'url(/images/nyj_spirals.jpg)'];
-    var lightBG = ['#fff','url(/images/jets_dlineBW2.jpg)', 'url(/images/halftone.png)', 'url(/images/diamond_wall_white.jpg)'];
-    
+fanApp.run( ['$rootScope', '$routeParams', '$location', '$route', '$http', function($scope, $routeParams, $location, $route, $http) {
+      
     $scope.$on('$routeChangeStart', function(e, next, current) { 
-
-        if(next.bodyStyle == 'dark'){
-            if(next.bodyBG == 0){
-                $("body").css('background',darkBG[0]);
-            }else{
-                $("body").css('background-image', darkBG[next.bodyBG]);
-                $("body").css('background-repeat',next.bodyRepeat);
-                $("body").css('background-attachment','fixed');
-                $("body").css('background-size','cover');
-            }
-        }else{
-            if(next.bodyBG == 0){
-                $("body").css('background',lightBG[0]);
-            }else{
-                $("body").css('background-image', lightBG[next.bodyBG]);
-                $("body").css('background-repeat',next.bodyRepeat);
-                $("body").css('background-attachment','fixed');
-                $("body").css('background-size','cover');
-            }
-        }
 
     });
 
     $scope.$on('$routeChangeSuccess', function(e, current) { 
-     
-        if(current.controller == 'homeController'){
-            $scope.menuLink = 1;
-            $scope.hideMenu = true;
-        }else if(current.controller == 'spotController'){
-            $scope.menuLink = 2;
-        }else{
-            $scope.menuLink = 3;
+
+        $scope.menuLink = current.pageIdx;
+
+        if(current.bodyClass){
+            $("body").removeClass().addClass(current.bodyClass);
         }
 
         if(current.controller != 'homeController'){
@@ -85,14 +83,374 @@ fanApp.run( ['$rootScope', '$routeParams', '$location', '$route', function($scop
 
     });
 
+    window.fbAsyncInit = function() {
+        Parse.FacebookUtils.init({ // this line replaces FB.init({
+          appId      : '357384804445447', // Facebook App ID
+          status     : true,  // check Facebook Login status
+          cookie     : true,  // enable cookies to allow Parse to access the session
+          xfbml      : true,  // initialize Facebook social plugins on the page
+          version    : 'v2.2' // point to the latest Facebook Graph API version
+        });
+     
+        // Run code after the Facebook SDK is loaded.
+        FB.getLoginStatus(function(response) {
+            $scope.isProcessing = true;
+            if (response.status === 'connected' && Parse.FacebookUtils.isLinked) {
+                if(!Parse.User.current()){
+                    $scope.facebookLogin();
+                }else{
+                    FB.api('/me', function(response) {
+                        console.log(Parse.User.current());
+                        $scope.userToken = Parse.User.current().id;
+                        $scope.user = response;
+                        $scope.username = response.name;
+                        $scope.isProcessing = false;
+                        $scope.setProfilePic();
+                        $scope.setUserToken();
+                        $scope.$apply();
+                    });
+                }
+            }
+            else if(Parse.User.current()) {
+                $scope.user = Parse.User.current();
+                var user = Parse.User.current();
+                user.fetch().then(function(fetchedUser){
+                    $scope.username = fetchedUser.get("display_name");
+                    $scope.userToken = fetchedUser.get("username");
+                    $scope.setProfilePic();
+                    $scope.setUserToken();
+                    $scope.isProcessing = false;
+                    $scope.$apply();
+                }, function(error){
+                    return false;
+                });
+            }else{
+                $scope.isProcessing = false;
+                $scope.$apply();
+            }
+       });
+    };
+
+
+ 
+  (function(d, s, id){
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) {return;}
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/en_US/sdk.js";
+    fjs.parentNode.insertBefore(js, fjs);
+  }(document, 'script', 'facebook-jssdk'));
+
+    $scope.setProfilePic = function() {
+        FB.getLoginStatus(function(response) {
+            if (response.status === 'connected' && Parse.FacebookUtils.isLinked) {
+                // the FQL query: Get the link of the image, that is the first in the album "Profile pictures" of this user.
+                FB.api('/me', function (response) {
+
+                    // the FQL query: Get the link of the image, that is the first in the album "Profile pictures" of this user.
+                    $(".profile-pic").attr("src", "http://graph.facebook.com/"+response.id+"/picture?type=large");
+                    $scope.profileUrl = "http://graph.facebook.com/"+response.id+"/picture?type=large";
+                    $scope.$apply();
+
+                });
+            }else{
+                var user = Parse.User.current();
+                user.fetch().then(function(fetchedUser){
+                    var image = fetchedUser.get("profile");
+                    $(".profile-pic").attr("src", image._url);
+                    $scope.profileUrl = image._url;
+                    $scope.$apply();
+                }, function(error){
+                    return false;
+                });
+            }
+        });
+    }
+
+    $scope.facebookLogin = function(){
+        $scope.showLoginForm = false;
+        $scope.showModalDialog = false;
+        Parse.FacebookUtils.logIn(null, {
+          success: function(user) {
+            console.log(user);
+            if (!user.existed()) {
+                $scope.user = user;
+                FB.api('/me', function(response) {
+                    console.log(response);
+                    $scope.username = response.name;
+                    $scope.isProcessing = false;
+                    $scope.setProfilePic();
+                    $scope.setUserToken();
+                    $scope.$apply();
+                });
+                $scope.$apply();
+            } else {
+                $scope.user = user;
+                FB.api('/me', function(response) {
+                    console.log(response);
+                    $scope.username = response.name;
+                    $scope.isProcessing = false;
+                    $scope.setProfilePic();
+                    $scope.setUserToken();
+                    $scope.$apply();
+                });
+                $scope.$apply();
+            }
+          },
+          error: function(user, error) {
+            alert("User cancelled the Facebook login or did not fully authorize.");
+          }
+        });
+    }
+
+    $scope.setUserToken = function() {
+        var user = Parse.User.current();
+        user.fetch().then(function(fetchedUser){
+            console.log(fetchedUser.id);
+            $scope.userToken = fetchedUser.id;
+            $scope.$apply();
+        });
+    }   
+
 }]);
 
-fanApp.controller('bodyController', function($scope, $location, $route, $routeParams){
+fanApp.service('FanUser', function(){
+    this.checkSession = function(){
+        var user = Parse.User.current();
+        user.fetch().then(function(fetchedUser){
+            return fetchedUser;
+        }, function(error){
+            return false;
+            //Handle the error
+        });
+    }
+
+    this.save = function(){
+        var User = Parse.User.current();
+        if(User && User.get("username") != null && User.get("firstName") != null){
+            User.save(null, {
+                success: function(user) {
+                    return user;
+                },
+                error: function(user, error){
+                    return false;
+                }
+            });
+        }else{
+            Parse.User.logOut();
+            return false;
+        }
+    }
+    this.register = function(user){
+        return Parse.Cloud.run('registerUser', user, {
+            success: function(user){
+                return user;
+            },
+            error: function(error) {
+                return error;
+            }
+        });
+    }
+
+    this.facebookInit = function() {
+        
+    }
+
+    this.facebookUsername = function(){
+
+        Parse.FacebookUtils.api('/me', function(response) {
+            console.log(response);
+            return response.name;
+        });
+    }
+
+    this.getName = function(){
+        FB.getLoginStatus(function(response) {
+            if (response.status === 'connected' && Parse.FacebookUtils.isLinked) {
+                Parse.FacebookUtils.api('/me', function(response) {
+                    return response.name;
+                });
+            }else{
+                return $scope.display_name;
+            }
+        });
+    }
+
+    /*this.isAdmin = function(id){
+        return Parse.Cloud.run('checkAdmin', id, {
+            success: function(result){
+                return result;
+            },
+            error: function(error){
+                return error;
+            }
+        });
+    }
+
+    this.getInfo = function(username) {
+        return Parse.Cloud.run('getInfo', username, {
+            success: function(results) {
+                return results;
+            },
+            error: function(error) {
+                return error;
+            }
+        });
+    }*/
+
+});
+
+fanApp.controller('bodyController', function($scope, $filter, $http, $location, $route, $routeParams, FanUser){
+
     if($routeParams.controller != 'homeController'){
         $("#main").css('padding-top','75px');
     }else{
         $("#main").css('padding-top', '0px');
     }
+
+    $http({method: 'GET', url: 'https://api.parse.com/1/classes/Rants',
+        headers: { 'X-Parse-Application-Id':'6BDeNGgmLDMe8UOcmWjIXxSjGJnjjdV6rxbA6NOn', 'X-Parse-REST-API-Key':'nHpTYmSSgLd1P0znvsPKUWdNJTjs0fmjoltZKvvz'}}).
+        success(function(data, status) {
+            $scope.rants = data.results;
+        }).
+        error(function(data, status) {
+            console.log(data);
+        });
+
+    $scope.states = $filter('getStates')();
+
+    $scope.showLogin = function(){
+        $scope.showLoginForm = true;
+    }
+
+    $scope.formatDateTime = function(date){
+        return moment(date).format("MM/DD/YYYY | hh:mm A");
+    }
+
+    $scope.loginUser = function(form){
+        Parse.User.logIn(form.username, form.password, {
+            success: function(user) {
+                $scope.user = user;
+                $scope.username = user.get("display_name");
+                $scope.email = user.get("email");
+                $scope.setModalMsg("Welcome, "+$scope.username);
+                $scope.$apply();
+            },
+            error: function(user, error) {
+                $scope.setModalMsg("Invalid Login. Please Try Again.");
+                $scope.$apply();
+            }
+        });
+    }
+
+    $scope.setUploadProfilePic = function(){
+        var fileUploadControl = $("#profilePhotoFileUpload")[0];
+        if (fileUploadControl.files.length > 0) {
+            var file = fileUploadControl.files[0];
+            var name = "photo.jpg";
+
+            var parseFile = new Parse.File(name, file);
+            parseFile.save();
+            $scope.register.profile = parseFile;
+        }
+    }
+
+    $scope.registerUser = function(form){
+
+        var newUser = {
+            email: form.email,
+            username: form.email,
+            password: form.password,
+            firstName: form.firstName,
+            lastName: form.lastName,
+            display_name: form.display_name,
+            profile: form.profile
+        };
+
+        Parse.Cloud.run('registerUser', newUser, {
+            success: function(user){
+                var object = {
+                    username: $scope.register.email,
+                    password: $scope.register.password
+                }
+                angular.copy({}, $scope.register);
+                $scope.registerForm.$setPristine();
+                $scope.showLoginForm = false;
+                $scope.setModalMsg("Thank You! An email confirmation link will be sent to your inbox shortly.");
+                $scope.$apply();
+            },
+            error: function(error) {
+                console.log(error);
+                console.log(error.message);
+                $scope.setModalMsg("Unable to sign up, "+ error.message);
+                $scope.$apply();
+            }
+        });
+
+    }
+
+    $scope.facebookLogin = function(){
+        $scope.showLoginForm = false;
+        $scope.showModalDialog = false;
+        Parse.FacebookUtils.logIn(null, {
+          success: function(user) {
+            if (!user.existed()) {
+                $scope.user = user;
+                FB.api('/me', function(response) {
+                    console.log(response);
+                    $scope.username = response.name;
+                    $scope.setProfilePic();
+                    $scope.setModalMsg("Logged in through Facebook! \nWelcome, "+$scope.username);
+                    $scope.$apply();
+                });
+                $scope.$apply();
+            } else {
+                $scope.user = user;
+                FB.api('/me', function(response) {
+                    console.log(response);
+                    $scope.username = response.name;
+                    $scope.setProfilePic();
+                    $scope.setModalMsg("Already logged in through Facebook! \nWelcome, "+$scope.username);
+                    $scope.$apply();
+                });
+                $scope.$apply();
+            }
+          },
+          error: function(user, error) {
+            alert("User cancelled the Facebook login or did not fully authorize.");
+          }
+        });
+    }
+
+    $scope.logout = function(){
+        Parse.User.logOut();
+        $scope.user = null;
+    }
+
+    $scope.resetModal = function(){
+        $scope.showModal = false;
+        $scope.showModalDialog = false;
+        $scope.modal = {};
+    }
+
+    $scope.simpleModalMsg = function(){
+        $scope.modal.msg = "Is this working?";
+        $scope.showModal = true;
+    }
+
+    $scope.setModalMsg = function(msg){
+        $scope.modal.msg = msg;
+        $scope.showModal = true;
+    }
+
+    $scope.setModalDialog = function(msg, opt1, opt2){
+        $scope.modal.msg = msg;
+        $scope.modal.opt1 = opt1;
+        $scope.modal.opt2 = opt2;
+        $scope.showModalDialog = true;
+    }   
+    
+    $scope.resetModal();
     
 });
 
@@ -100,45 +458,47 @@ fanApp.controller('splashController', function($scope, $location, $route){
     $scope.splash = true;
 });
 
-fanApp.controller('homeController', function($scope, $location, $route, $timeout, $window){
+fanApp.controller('homeController', function($scope, $location, $route, $timeout, $http, $window){
 
-    $scope.callElem = $("#home3").position().top;
+    $http({method: 'GET', url: 'https://api.parse.com/1/classes/Articles',
+        headers: { 'X-Parse-Application-Id':'6BDeNGgmLDMe8UOcmWjIXxSjGJnjjdV6rxbA6NOn', 'X-Parse-REST-API-Key':'nHpTYmSSgLd1P0znvsPKUWdNJTjs0fmjoltZKvvz'}}).
+        success(function(data, status) {
+            $scope.articles = data.results;
+            $scope.nextArticle();
+        }).
+        error(function(data, status) {
+            console.log(data);
+        });
 
     $scope.slides = [
         {
             header: 'The Blog',
             text: 'Check out the latest entries in the Fanalytik Blogosphere',
-            linkType: 2,
             link: 'http://fanalytik.co/blog/',
+            linkType: 2,
             index: 1
         },
         {
             header: 'Spotlight',
             text: 'Who is in the spotlight this week? Check out our highlight blog of the elite and the up and coming.',
-            linkType: 1,
             link: '#spotlight',
+            linkType: 1,
             index: 2
         },
         {
-            header: 'Online Polls',
+            header: 'Fan Talk',
             text: 'Let your voice be heard on the latest topics in sports.',
-            link: 'http://fanalytik.co/blog/category/poll/',
-            linkType: 2,
+            link: '#talk',
+            linkType: 1,
             index: 3
         },
         {
-            header: 'Fans Take',
-            text: 'Take a look at the latest in NFL fan chatter in our tweet-based articles',
-            link: 'http://fanalytik.co/blog/category/fans-take/',
+            header: 'Jets',
+            text: 'Catch up on our latest analysis of the New York Jets',
+            link: 'http://fanalytik.co/blog/category/Jets/',
             linkType: 2,
             index: 4
-        },
-        {
-            header: 'World Cup 2014',
-            text: 'The World Cup is coming soon, starting on June 12th! Check out the group tables this year.',
-            linkType: 2,
-            index: 5
-        }        
+        }     
     ];
 
     $scope.slideIdx = 0;
@@ -193,102 +553,72 @@ fanApp.controller('homeController', function($scope, $location, $route, $timeout
         }
     }
 
-    var headlineEngine = 0;
+    var articleEngine = 0;
 
-    var headlineIdx = 0;
+    $scope.articleIdx = 0;
 
-    var headlines = [
-        "Chelsea reportedly purchase Atletico Madrid striker, Diego Costa for $53 Million.",
-        "Jets sign rookie S Calvin Pryor."
-    ];
-
-    //$scope.headline = headlines[0];
-
-    $scope.nextHeadline = function(){
-        $timeout.cancel(headlineEngine);
-        $("#headline").animate({left: -9999});
-        if(headlineIdx == headlines.length-1){
-            headlineIdx = 0;
+    $scope.nextArticle = function(){
+        $timeout.cancel(articleEngine);
+        $("#article").animate({left: -9999}, 1000);
+        if($scope.articleIdx == $scope.articles.length-1){
+            $scope.articleIdx = 0;
         }else{
-            headlineIdx++;
+            $scope.articleIdx++;
         }
-        $scope.headline = headlines[headlineIdx];
-        $("#headline").animate({left: 0});
-        headlineEngine = $timeout($scope.nextHeadline, 7500);
+        $("#article").animate({left: 0});
+        articleEngine = $timeout($scope.nextArticle, 7500);
     }
 
-    $scope.prevHeadline = function(){
-        $timeout.cancel(headlineEngine);
-        $("#headline").animate({left: -9999});
-        if(headlineIdx == 0){
-            headlineIdx = headlines.length-1;
+    $scope.prevArticle = function(){
+        $timeout.cancel(articleEngine);
+        $("#article").animate({left: -9999}, 1000);
+        if($scope.articleIdx == 0){
+            $scope.articleIdx = $scope.articles.length-1;
         }else{
-            headlineIdx--;
+            $scope.articleIdx--;
         }
-        $scope.headline = headlines[headlineIdx];
-        $("#headline").animate({left: 0});
-        headlineEngine = $timeout($scope.nextHeadline, 7500);
+        $("#article").animate({left: 0});
+        articleEngine = $timeout($scope.nextArticle, 7500);
     }
-
-    $scope.nextHeadline();
-
-    $scope.articles = [
-        {
-            title: "The Danger of the Limited Mindset",
-            date: "6/1/14",
-            blurb: "What can the Jets learn from the Indiana Pacers?",
-            link: 'http://wp.me/p4Dlup-6p',
-            image: '/images/rexryan.jpg'
-        },
-        {
-            title: "Player Analysis: Jalen Saunders",
-            date: "5/21/14",
-            blurb: "The NFL Outlook for the rookie from Oklahoma",
-            link: 'http://wp.me/p4Dlup-6f',
-            image: '/images/jalensaunders_2.jpg'
-        },
-        {
-            title: "Player Analysis: Jace Amaro",
-            date: "5/19/14",
-            blurb: "How will Amaro fair in the NFL?",
-            link: 'http://wp.me/p4Dlup-5R',
-            image: '/images/jaceamaro_1.jpg'
-        },
-        {
-            title: "Jets Draft Poll 2014",
-            date: "5/15/14",
-            blurb: "What are your thoughts on the Jets 2014 draft picks?",
-            link: 'http://wp.me/p4Dlup-5E',
-            image: '/images/calpryor.jpg'
-        }
-    ];
 
 });
 
 
-fanApp.controller('spotController', function($scope, $location, $route, $sce){
-    $scope.callElem = $("#spot2").position().top;
+fanApp.controller('spotController', function($scope, $location, $route, $sce, $http, $filter, $routeParams, $timeout){
+    $http({method: 'GET', url: 'https://api.parse.com/1/classes/Videos',
+        headers: { 'X-Parse-Application-Id':'6BDeNGgmLDMe8UOcmWjIXxSjGJnjjdV6rxbA6NOn', 'X-Parse-REST-API-Key':'nHpTYmSSgLd1P0znvsPKUWdNJTjs0fmjoltZKvvz'}}).
+        success(function(data, status) {
+            $scope.videos = data.results;
+            $scope.videos = $filter('orderBy')($scope.videos, "v_id", "reverse");
+            if($routeParams.idx){
+                console.log($routeParams);
+                var idx = parseInt($routeParams.idx);
+                $scope.showVideoIdx = idx;
+                $scope.isolateVideo = true;
+                $scope.$apply();
+            }
+        }).
+        error(function(data, status) {
+            console.log(data);
+        });
+
+    $scope.refreshVideos = function(){
+        $http({method: 'GET', url: 'https://api.parse.com/1/classes/Videos',
+            headers: { 'X-Parse-Application-Id':'6BDeNGgmLDMe8UOcmWjIXxSjGJnjjdV6rxbA6NOn', 'X-Parse-REST-API-Key':'nHpTYmSSgLd1P0znvsPKUWdNJTjs0fmjoltZKvvz'}}).
+            success(function(data, status) {
+                $scope.videos = data.results;
+            }).
+            error(function(data, status) {
+                console.log(data);
+            });
+    }
 
     $scope.splash = false;
     $scope.hash = "";
-    $scope.videos = [
-        {
-            id: "v1",
-            name: "Video 1",
-            date: "05/28/14",
-            caption: "This is video 1.",
-            link: "https://www.youtube.com/embed/rc_M_g72V8Y"
-        },
-        {
-            id: "v2",
-            name: "Video 2",
-            date: "05/29/14",
-            caption: "This is video 2.",
-            link: "https://www.youtube.com/embed/nMiHAZe7gpY"
-        }
-    ]; 
+    $scope.showVideoIdx = 0;
 
     $scope.trustSrc = function(src) {
+        console.log(src);
         return $sce.trustAsResourceUrl(src);
     }
 
@@ -299,15 +629,310 @@ fanApp.controller('spotController', function($scope, $location, $route, $sce){
     }
 
     $scope.hasMorePosts = function(){
-        if($scope.vidCount >= $scope.videos.length){
-            return false;
+        if($scope.videos){
+            if($scope.vidCount >= $scope.videos.length){
+                return false;
+            }else{
+                return true;
+            }
         }else{
-            return true;
+            return false;
         }
+    }
+
+    $scope.setVideoIdx = function(idx){
+        $scope.showVideoIdx = idx;
+    }
+
+    $scope.submitVideo = function(){
+        var data = $scope.submit;
+
+        data.message = "URL: "+data.url+"\n\n"+"Title: "+data.title;
+        
+        var email = {
+            key: 'rYwkbK4FxF85oX2tkVihXQ',
+            message: {
+                text: data.message,
+                subject: "Video submission from "+data.email,
+                from_email: data.email,
+                from_name: "Fanalytik User",
+                to: [{
+                    email: "daniel.essien@gmail.com",
+                    name: "Daniel Essien"
+                }]
+            }
+        };
+
+        $http({method: 'POST', data: email, url: 'https://mandrillapp.com/api/1.0/messages/send.json'}).
+            success(function(data, status) {
+                var messageId = data.objectId;
+                angular.copy({}, $scope.submit);
+                $scope.videoForm.$setPristine();
+                $scope.showVideoForm = false;
+            }).
+            error(function(data, status) {
+                console.log(data);
+                alert("Error: Message could not be sent. Please try again.");
+            });
     }
 
 });
 
+fanApp.controller('talkController', function($scope, $http, $routeParams, FanUser){
+
+    $scope.topics = [
+        "NFL (General)",
+        "College Football",
+        "Jets",
+        "Other"
+    ]
+
+    $scope.refreshPosts = function(){
+        $scope.isProcessing = true;
+
+        $http({method: 'GET', url: 'https://api.parse.com/1/classes/Articles',
+            headers: { 'X-Parse-Application-Id':'6BDeNGgmLDMe8UOcmWjIXxSjGJnjjdV6rxbA6NOn', 'X-Parse-REST-API-Key':'nHpTYmSSgLd1P0znvsPKUWdNJTjs0fmjoltZKvvz'}}).
+            success(function(data, status) {
+                $scope.articles = data.results;
+            }).
+            error(function(data, status) {
+                console.log(data);
+            });
+
+        /************************************/
+
+        $http({method: 'GET', url: 'https://api.parse.com/1/classes/Posts',
+            headers: { 'X-Parse-Application-Id':'6BDeNGgmLDMe8UOcmWjIXxSjGJnjjdV6rxbA6NOn', 'X-Parse-REST-API-Key':'nHpTYmSSgLd1P0znvsPKUWdNJTjs0fmjoltZKvvz'}}).
+            success(function(data, status) {
+                console.log(data);
+                $scope.posts = data.results;
+                $scope.selectedPost = $scope.posts[$scope.selectedPostIdx];
+            }).
+            error(function(data, status) {
+                console.log(data);
+            });
+
+        /***********************************/
+
+        $http({method: 'GET', url: 'https://api.parse.com/1/classes/Replies',
+            headers: { 'X-Parse-Application-Id':'6BDeNGgmLDMe8UOcmWjIXxSjGJnjjdV6rxbA6NOn', 'X-Parse-REST-API-Key':'nHpTYmSSgLd1P0znvsPKUWdNJTjs0fmjoltZKvvz'}}).
+            success(function(data, status) {
+                $scope.replies = data.results;
+                $scope.isProcessing = false;
+            }).
+            error(function(data, status) {
+                console.log(data);
+            });
+
+    }
+
+    $scope.refreshPosts();
+
+    $scope.selectPost = function(post, idx){
+        $scope.selectedPost = post;
+        $scope.selectedPostIdx = post;
+        var id = $scope.selectedPost.objectId;
+        var data = {
+            objectId: id
+        }
+        Parse.Cloud.run('getReplies', data, {
+            success: function(results) {
+                $scope.selectedReplies = results;
+                $scope.$apply();
+            },
+            error: function(error){
+                console.log(error);
+            }
+        });
+        
+    }
+
+    $scope.replyWithQuote = function(name, quote){
+        $scope.reply2 = {};
+        $scope.reply2.message = "["+name+" - "+quote+"]"+"\n\n";
+        $scope.showReplyForm2 = true;
+    }
+
+    $scope.submitTopic = function(){
+        var data = $scope.topic;
+        data.name = $scope.username;
+        data.profileUrl = $scope.profileUrl;
+        data.replyCount = 0;
+        $scope.isProcessing = true;
+        Parse.Cloud.run('savePost', data, {
+            success: function(message){
+                angular.copy({}, $scope.topic);
+                angular.copy({}, $scope.post);
+                $scope.topicForm.$setPristine();
+                $scope.showTopicForm = false;
+                $scope.isProcessing = false;
+                $scope.refreshPosts();
+                //$scope.setModalMsg(message);
+                $scope.$apply();
+            }, error: function(error){
+                alert(error);
+            }
+        });
+    }
+
+    $scope.saveReply = function(){
+        var data = $scope.reply;
+        data.post_id = $scope.selectedPost.objectId;
+        data.profileUrl = $scope.profileUrl;
+        data.name = $scope.username;
+        $scope.isProcessing = true;
+        Parse.Cloud.run('saveReply', data, {
+            success: function(reply){
+                console.log(reply);
+                angular.copy({}, $scope.reply);
+                $scope.showReplyForm = false;
+                $scope.isProcessing = false;
+                $scope.reply_form.$setPristine();
+                $scope.refreshPosts();
+                $scope.incrementReplyCount(reply.get("post_id"));
+                $scope.$apply();
+            }, 
+            error: function(error){
+                alert(error);
+            }
+        });
+    }
+
+    $scope.saveReply2 = function(){
+        console.log($scope.selectedPost);
+        var data = {};
+        data.message = $scope.reply2.message;
+        data.post_id = $scope.selectedPost.objectId;
+        data.profileUrl = $scope.profileUrl;
+        data.name = $scope.username;
+        $scope.isProcessing = true;
+        Parse.Cloud.run('saveReply', data, {
+            success: function(reply){
+                angular.copy({}, $scope.reply2);
+                $scope.showReplyForm = false;
+                $scope.isProcessing = false;
+                $scope.reply_quote_form.$setPristine();
+                $scope.refreshPosts();
+                $scope.incrementReplyCount(reply.get("post_id"));
+                $scope.$apply();
+            }, 
+            error: function(error){
+                alert(error);
+            }
+        });
+    }
+
+    $scope.incrementReplyCount = function(id){
+        console.log(id);
+        var replyData = {
+            objectId: id
+        }
+        Parse.Cloud.run('incrementReplies', replyData, {
+            success: function(reply) {
+                console.log(reply);
+                $scope.$apply();
+            },
+            error: function(error){
+                console.log(error);
+            }
+        });
+    }
+
+    $scope.postAgree = function(id) {
+        var data = {
+            objectId: id, 
+            userId: $scope.userToken
+        }
+        Parse.Cloud.run('postAgree', data, {
+            success: function(post) {
+                $scope.refreshPosts();
+                $scope.$apply();
+            }
+        });
+    }
+
+    $scope.postDisagree = function(id) {
+        var data = {
+            objectId: id, 
+            userId: $scope.userToken
+        }
+        Parse.Cloud.run('postDisagree', data, {
+            success: function(post) {
+                $scope.refreshPosts();
+                $scope.$apply();
+            }
+        });
+    }
+
+    $scope.replyAgree = function(id) {
+        var data = {
+            objectId: id, 
+            userId: $scope.userToken
+        }
+        Parse.Cloud.run('replyAgree', data, {
+            success: function(post) {
+                $scope.refreshPosts();
+                $scope.$apply();
+            }
+        });
+    }
+
+    $scope.replyDisagree = function(id) {
+        var data = {
+            objectId: id, 
+            userId: $scope.userToken
+        }
+        Parse.Cloud.run('replyDisagree', data, {
+            success: function(post) {
+                $scope.refreshPosts();
+                $scope.$apply();
+            }
+        });
+    }
+
+    $scope.hasAgreedPost = function(post) {
+        if(post){
+            console.log(post);
+            if(post.agreeUsers.indexOf(Parse.User.current().id) < 0){
+                return false;
+            }else{
+                return true;
+            }
+        }
+    }
+
+    $scope.hasDisagreedPost = function(post) {
+        if(post){
+            console.log(post);
+            if(post.disagreeUsers.indexOf(Parse.User.current().id) < 0){
+                return false;
+            }else{
+                return true;
+            }
+        }
+    }    
+
+    $scope.hasAgreedReply = function(reply) {
+        if(reply){
+            if(reply.attributes.agreeUsers.indexOf(Parse.User.current().id) < 0){
+                return false;
+            }else{
+                return true;
+            }
+        }
+    }
+
+    $scope.hasDisagreedReply = function(reply) {
+        if(reply){
+            if(reply.attributes.disagreeUsers.indexOf(Parse.User.current().id) < 0){
+                return false;
+            }else{
+                return true;
+            }
+        }
+    }
+
+});
 
 fanApp.directive('pageScroll', function($timeout){
     return {
@@ -400,6 +1025,172 @@ fanApp.directive('callMenu', function(){
                 }
             });
         }
+    }
+});
+
+fanApp.directive('disqusBoard', function(){
+    return{
+        link: function(scope, elem, attrs){
+            $(elem).click(function(){
+                if( typeof DISQUS != 'undefined' ) { 
+                  DISQUS.reset({ 
+                    reload: true, 
+                     config: function () { 
+                       this.page.identifier = 'fanalytik.co'; 
+                       this.page.url = 'fanalytik.co';
+                     } 
+                   }); 
+                } 
+                var disqus_shortname = 'fanalytik'; // Required - Replace example with your forum shortname
+                var disqus_identifier = 'fanalytik.co';
+                var disqus_url = 'fanalytik.co';
+                var disqus_title = attrs.disqusTitle;
+                console.log(disqus_identifier);
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://' + disqus_url + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            });
+        }
+    }
+})
+
+fanApp.directive('formatTextarea', function(){
+    return{
+        require: 'ngModel',
+        link: function(scope, elem, attrs, ngModel){
+            $(elem).focus(function(){
+                $(document).keypress(function(e) {
+                    if(e.which == 13) {
+                        var temp = $(elem).val();
+                        $(elem).val(temp+"<br />");
+                    }
+                });
+            })
+        }
+    }
+});
+
+fanApp.directive('errorMsg', function(){
+    return{
+        require: 'ngModel',
+        link: function(scope, elem, attrs, ngModel) {
+            var inputName = $(elem).attr('name');
+            var errorId = "#"+inputName;
+            $(elem).parent(".form-input").append("<div id='"+inputName+"' class='error-msg'>"+attrs.errorMsg+"</div>");
+            $(elem).blur(function(){
+                if(ngModel.$invalid){
+                    $(errorId).show('slow');
+                }else{
+                    $(errorId).hide();
+                }
+            });
+            $(elem).keyup(function(){
+                if(!ngModel.$invalid){
+                    $(errorId).hide();
+                }
+            });
+        }
+    }
+});
+
+fanApp.directive('passwordMatch', function(){
+    return{
+        require: 'ngModel',
+        link: function(scope, elem, attrs, ngModel) {
+            var inputName = $(elem).attr('name');
+            var errorId = "#"+inputName;
+            $(elem).parent(".form-input").append("<div id='"+inputName+"' class='error-msg'>Passwords must match</div>");
+            $(elem).blur(function(){
+                if($(elem).val() != attrs.passwordMatch){
+                    $(errorId).show('slow');
+                }else{
+                    $(errorId).hide();
+                }
+            });
+        }
+    }
+});
+
+fanApp.directive('fileModel', ['$parse', function ($parse) {
+    return {
+        restrict: 'A',
+        link: function(scope, element, attrs) {
+            var model = $parse(attrs.fileModel);
+            var modelSetter = model.assign;
+            
+            element.bind('change', function(){
+                scope.$apply(function(){
+                    modelSetter(scope, element[0].files[0]);
+                });
+            });
+        }
+    };
+}]);
+
+fanApp.filter('getStates', function(){
+    return function() {
+        var usStates = [
+            { name: 'ALABAMA', abbreviation: 'AL'},
+            { name: 'ALASKA', abbreviation: 'AK'},
+            { name: 'AMERICAN SAMOA', abbreviation: 'AS'},
+            { name: 'ARIZONA', abbreviation: 'AZ'},
+            { name: 'ARKANSAS', abbreviation: 'AR'},
+            { name: 'CALIFORNIA', abbreviation: 'CA'},
+            { name: 'COLORADO', abbreviation: 'CO'},
+            { name: 'CONNECTICUT', abbreviation: 'CT'},
+            { name: 'DELAWARE', abbreviation: 'DE'},
+            { name: 'DISTRICT OF COLUMBIA', abbreviation: 'DC'},
+            { name: 'FEDERATED STATES OF MICRONESIA', abbreviation: 'FM'},
+            { name: 'FLORIDA', abbreviation: 'FL'},
+            { name: 'GEORGIA', abbreviation: 'GA'},
+            { name: 'GUAM', abbreviation: 'GU'},
+            { name: 'HAWAII', abbreviation: 'HI'},
+            { name: 'IDAHO', abbreviation: 'ID'},
+            { name: 'ILLINOIS', abbreviation: 'IL'},
+            { name: 'INDIANA', abbreviation: 'IN'},
+            { name: 'IOWA', abbreviation: 'IA'},
+            { name: 'KANSAS', abbreviation: 'KS'},
+            { name: 'KENTUCKY', abbreviation: 'KY'},
+            { name: 'LOUISIANA', abbreviation: 'LA'},
+            { name: 'MAINE', abbreviation: 'ME'},
+            { name: 'MARSHALL ISLANDS', abbreviation: 'MH'},
+            { name: 'MARYLAND', abbreviation: 'MD'},
+            { name: 'MASSACHUSETTS', abbreviation: 'MA'},
+            { name: 'MICHIGAN', abbreviation: 'MI'},
+            { name: 'MINNESOTA', abbreviation: 'MN'},
+            { name: 'MISSISSIPPI', abbreviation: 'MS'},
+            { name: 'MISSOURI', abbreviation: 'MO'},
+            { name: 'MONTANA', abbreviation: 'MT'},
+            { name: 'NEBRASKA', abbreviation: 'NE'},
+            { name: 'NEVADA', abbreviation: 'NV'},
+            { name: 'NEW HAMPSHIRE', abbreviation: 'NH'},
+            { name: 'NEW JERSEY', abbreviation: 'NJ'},
+            { name: 'NEW MEXICO', abbreviation: 'NM'},
+            { name: 'NEW YORK', abbreviation: 'NY'},
+            { name: 'NORTH CAROLINA', abbreviation: 'NC'},
+            { name: 'NORTH DAKOTA', abbreviation: 'ND'},
+            { name: 'NORTHERN MARIANA ISLANDS', abbreviation: 'MP'},
+            { name: 'OHIO', abbreviation: 'OH'},
+            { name: 'OKLAHOMA', abbreviation: 'OK'},
+            { name: 'OREGON', abbreviation: 'OR'},
+            { name: 'PALAU', abbreviation: 'PW'},
+            { name: 'PENNSYLVANIA', abbreviation: 'PA'},
+            { name: 'PUERTO RICO', abbreviation: 'PR'},
+            { name: 'RHODE ISLAND', abbreviation: 'RI'},
+            { name: 'SOUTH CAROLINA', abbreviation: 'SC'},
+            { name: 'SOUTH DAKOTA', abbreviation: 'SD'},
+            { name: 'TENNESSEE', abbreviation: 'TN'},
+            { name: 'TEXAS', abbreviation: 'TX'},
+            { name: 'UTAH', abbreviation: 'UT'},
+            { name: 'VERMONT', abbreviation: 'VT'},
+            { name: 'VIRGIN ISLANDS', abbreviation: 'VI'},
+            { name: 'VIRGINIA', abbreviation: 'VA'},
+            { name: 'WASHINGTON', abbreviation: 'WA'},
+            { name: 'WEST VIRGINIA', abbreviation: 'WV'},
+            { name: 'WISCONSIN', abbreviation: 'WI'},
+            { name: 'WYOMING', abbreviation: 'WY' }
+        ];
+        return usStates;
     }
 });
 

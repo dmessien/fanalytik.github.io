@@ -1,0 +1,136 @@
+<menu call-menu ng-include src="'pages/menu.html'"></menu>
+<div id="talk1" class="page">
+	<h1>Fan Talk</h1>
+	<p ng-show="!user">Must be registered user to use Fan Talk. <a ng-click="showLogin()">Sign in here</a></p>
+</div>
+<div id="talk2" class="page" ng-show="!selectedPost" ng-class="{disabled: !user}">
+	<div class="talk-menu" ng-class="{active: showTopicForm}">
+		<button ng-click="showTopicForm = true" ng-disabled="!user" ng-show="!showTopicForm">Start Discussion</button>
+		<h1>Let your voice be heard!</h1>
+		<div ng-show="showTopicForm">
+			<form class="col-md-6 col-sm-8 col-xs-11" name="topicForm" novalidate>
+				<h2>Discussion Form</h2>
+				<hr />
+				<div class="form-input">
+					<input type="text" ng-model="topic.title" required placeholder="Enter Title">
+				</div>
+				<div class="form-input">
+					<input type="text" ng-model="topic.team" required placeholder="Subject/Team (i.e - Jets)">
+				</div>
+				<div class="form-input">
+					<h3>Message</h3>
+					<textarea rows="8" cols="50" name="message" format-textarea required ng-model="topic.message" ng-trim="false" placeholder="Enter Message Here"></textarea>
+				</div>
+				<div class="form-input">
+					<input type="submit" value="Submit" ng-click="submitTopic()">
+				</div>
+			</form>
+			<a ng-click="showTopicForm = false"><h3>- Hide Form -</h3></a>
+		</div>
+	</div>
+	<div class="switch-wrap col-md-5 col-sm-8 col-xs-10">
+		<div class="label col-md-5 col-sm-5 col-xs-5 clickable" ng-click="showArticles = false">Discussion</div>
+		<div class="switch col-md-2 col-sm-2 col-xs-2 clickable" ng-click="showArticles = !showArticles">
+			<div class="switch-btn" ng-class="{left: !showArticles, right: showArticles}"></div>
+		</div>
+		<div class="label col-md-5 col-sm-5 col-xs-5 clickable" ng-click="showArticles = true">Articles</div>
+	</div>
+	<div class="board post-board col-md-10 col-sm-11 col-xs-12" ng-show="!showArticles">
+		<div class="row" ng-repeat="post in posts">
+			<div class="box">
+				<div class="heading">
+					<h3><img class="profile-pic-md" ng-src="{{post.profileUrl}}" alt="Profile" /> <em>{{post.team}}</em>: {{post.title}}</h3>
+					<p><em>by: {{post.name}}</em></h3>
+				</div>
+				<div class="message" ng-bind-html="post.message"></div>
+				<div class="comments">
+					<h3>{{post.replyCount}} - Comments</h3>
+					<p><span ng-show="post.agrees">{{post.agrees}} - Agree</span><span ng-show="post.disagrees"> | {{post.disagrees}} - Disagree</span></p>
+				</div>
+			</div>
+			<a ng-click="selectPost(post, $index)"><div class="text-center click-help">Click to view discussion</div></a>
+		</div>
+	</div>
+	<div class="board article-board col-md-10 col-sm-11 col-xs-12" ng-show="showArticles">
+		<div class="row" ng-repeat="article in articles">
+			<div class="box">
+				<div class="col col-md-3">
+					<img class="logo" ng-src="/images/{{article.image}}" alt="Article" />
+				</div>
+				<div class="col col-md-9">
+					<p>{{article.date}}</p>
+					<h3>{{article.title}}</h3>
+					<p><span class="disqus-comment-count" data-disqus-url="{{longUrl}}"></span></p>
+					<hr />
+				</div>
+			</div>
+			<a ng-href="{{article.link}}"><div class="text-center click-help">Click to view article</div></a>
+		</div>
+	</div>
+</div>
+<div id="talk3" class="page" ng-show="selectedPost">
+	<div class="back">
+		<a ng-click="selectedPost = false"><h3>Back to posts</h3></a>
+	</div>
+	<div class="reply-board col-md-10 col-sm-10 col-xs-12">
+		<div class="title">
+			<div class="heading">
+				<h3><img class="profile-pic-md" ng-src="{{selectedPost.profileUrl}}" alt="Profile" /> {{selectedPost.name}}</h3>
+				<hr />
+				<h2>{{selectedPost.team}}: {{selectedPost.title}}</h2>
+			</div>
+			<div class="message" ng-bind-html="selectedPost.message"></div>
+			<div class="buttons">
+				<button ng-click="showReplyForm = true" ng-show="!showReplyForm">Reply</button>
+				<span><button class="agree" ng-class="{active: hasAgreedPost(selectedPost)}" ng-click="postAgree(selectedPost.objectId)"><img src="/images/agree.png" alt="Agree" /> ({{selectedPost.agrees}})</button> Tell 'Em</span>
+				<span><button class="disagree" ng-class="{active: hasDisagreedPost(selectedPost)}" ng-click="postDisagree(selectedPost.objectId)"><img src="/images/disagree.png" alt="Disagree" /> ({{selectedPost.disagrees}})</button> Shut It</span>
+			</div>
+			<div>
+				<form class="col-md-6 col-sm-10 col-xs-12" name="reply_form" ng-show="showReplyForm">
+					<h3>Reply to post</h3>
+					<div ng-show="user">
+						<img class="profile-pic profile-pic-sm" alt="Profile" />
+						<p>{{username}}</p>
+					</div>
+					<div class="form-input">
+						<textarea rows="8" cols="50" name="message" required ng-model="reply.message" ng-trim="false" placeholder="Enter Message Here"></textarea>
+					</div>
+					<div class="form-input">
+						<input type="submit" value="Reply" ng-click="saveReply()">
+					</div>
+					<div>
+						<a ng-click="showReplyForm = false"><h3>- Hide Reply Form -</h3></a>
+					</div>
+				</form>
+			</div>
+		</div>
+		<div class="replies col col-md-12">
+			<div class="title"><h3>Replies</h3></div>
+			<div class="reply" ng-repeat="rep in selectedReplies">
+				<h3 class="heading"><img class="profile-pic-sm" ng-src="{{rep.attributes.profileUrl}}" alt="Profile" /> {{rep.attributes.name}} - <em>{{formatDateTime(rep.createdAt)}}</em></h3>
+				<div class="message" ng-bind-html="rep.attributes.message"></div>
+				<div class="buttons" ng-show="!showReplyForm2">
+					<button ng-click="showReplyForm2 = true">Reply</button>
+					<button ng-click="replyWithQuote(rep.attributes.name, rep.attributes.message)">Reply w/ quote</button>
+					<span><button class="agree" ng-class="{active: hasAgreedReply(rep)}" ng-click="replyAgree(rep.id)"><img src="/images/agree.png" alt="Agree" /> ({{rep.attributes.agrees}})</button> <em>Tell 'Em</em></span>
+					<span><button class="disagree" ng-class="{active: hasDisagreedReply(rep)}" ng-click="replyDisagree(rep.id)"><img src="/images/disagree.png" alt="Disagree" /> ({{rep.attributes.disagrees}})</button> <em>Shut It</em></span>
+				</div>
+				<div>
+					<form class="col-md-6 col-sm-10 col-xs-12" name="reply_quote_form" ng-show="showReplyForm2">
+						<h3>Reply to post</h3>
+						<div class="form-input">
+							<textarea rows="8" cols="50" name="message" required ng-model="reply2.message" placeholder="Enter Message Here"></textarea>
+						</div>
+						<div class="form-input">
+							<input type="submit" value="Reply" ng-click="saveReply2()">
+						</div>
+						<div>
+							<a ng-click="showReplyForm2 = false"><h3>- Hide Reply Form -</h3></a>
+						</div>
+					</form>
+				</div>
+				<hr />
+			</div>
+		</div>
+	</div>
+</div>

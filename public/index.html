@@ -3,10 +3,13 @@
 <meta charset="utf-8">
 <head>
 <title>Fanalytik</title>
-<link rel="stylesheet" href="/css/fanStyle.css">
-<link href='http://fonts.googleapis.com/css?family=Megrim' rel='stylesheet' type='text/css'>
-<link href='http://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
-<link href='http://fonts.googleapis.com/css?family=Lato:300,400,700,900,700italic,900italic' rel='stylesheet' type='text/css'>
+    <!-- CSS & Fonts -->
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/fanStyle.css">
+    <link href='http://fonts.googleapis.com/css?family=Megrim' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700,900,700italic,900italic' rel='stylesheet' type='text/css'>
+
     
     <!-- SCRIPTS -->
     <script src="http://code.jquery.com/jquery.min.js"></script>
@@ -14,27 +17,125 @@
     <script type="text/javascript" src="/js/jquery.scrollTo-min.js"></script>
     <script type="text/javascript" src="/js/jquery.localscroll-min.js"></script>
     <script type="text/javascript" src="/js/moment.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular-route.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular-resource.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular-route.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular-resource.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular-sanitize.js"></script>
     <script type="text/javascript" src="https://mandrillapp.com/api/docs/js/mandrill.js"></script>
-    <script src="http://www.parsecdn.com/js/parse-1.2.12.min.js"></script>
+    <script src="http://www.parsecdn.com/js/parse-1.2.13.min.js"></script>
     <script type="text/javascript" src="/js/fanApp.js"></script>
 </head>
 <body ng-controller="bodyController">
+   
+    <div class="modalWrap" ng-show="showModal">
+        <div class="modalBox col-md-5 col-sm-8 col-xs-11">
+            <div class="title">
+                <h2 itemprop="name">Fanalytik</h2>
+            </div>
+            <p>{{modal.msg}}</p>
+            <div><button ng-click="resetModal()">OK</button></div>
+        </div>
+    </div>
+    <div class="modalWrap" ng-show="showModalDialog">
+        <div class="modalBox col-md-5 col-sm-8 col-xs-11">
+            <div class="title">
+                <h2 itemprop="name">Fanalytik</h2>
+            </div>
+            <p>{{modal.msg}}</p>
+            <div>
+                <button ng-click="modal.opt1()">Yes</button>
+                <button ng-click="modal.opt2()">Cancel</button>
+            </div>
+        </div>
+    </div>
     <div id="loading">
-        <h1>Loading...</h1>
+        <h1>Fanalytik</h1>
+        <h2>Loading...</h2>
         <div><img src="/images/ajax-loader.gif" alt="loading" /></div>
     </div>
-    <div id="main" ng-view ng-class="{mainBump: !hideMenu}"></div>
+    <div id="main" ng-class="{loading: isProcessing}" ng-view></div>
 	<footer>
-        <div id="footerMenu">
-            <a>Home</a>
-            <a>Link 2</a>
-            <a href="#spotlight">Link 3</a>
+        <div class="col col-md-3">
+            <h3>Navigation</h3>
+            <hr />
+            <li><a href="#home">Home</a></li>
+            <li><a href="#spotlight">Spotlight</a>
+            <li><a href="/blog">Blog</a></li>
+            <li><a href="#talk">Fan Talk</a></li>
+            <li><a href="/blog/contact-us/">Contact Us</a></li>
         </div>
-        <p id="copy"><span>Made by <a href="http://www.essiendesign.com">Essien Designs</a> | </span>&copy; Fanalytik 2014</p>
+        <div class="col col-md-3">
+            <h3>Friends/Related Sites</h3>
+            <hr />
+            <li><a href="http://www.foxsports.com/" target="_blank">Fox Sports</a></li>
+            <li><a href="http://espn.go.com/" target="_blank">ESPN</a></li>
+            <li><a href="http://bleacherreport.com/" target="_blank">Bleacher Report</a></li>
+            <li><a href="http://theleftbench.com/" target="_blank">The Left Bench</a></li>
+        </div>
+        <div class="col col-md-3">
+            <h3>Social Media</h3>
+            <hr />
+            <li><a href="" target="_blank">Twitter</a></li>
+            <li><a href="" target="_blank">Facebook</a></li>
+        </div>
+        <div class="col col-md-3">
+            <div
+              class="fb-like"
+              data-share="true"
+              data-width="150"
+              data-show-faces="true">
+            </div>
+            <p id="copy"><span>Made by <a href="http://www.danielessien.com">Essien Designs</a></span>
+            <hr />
+            <p>&copy; Fanalytik 2014</p>
+        </div>
 	</footer>
+    <div class="wrap login-wrap" ng-show="showLoginForm">
+        <h1>Fanalytik</h1>
+        <div class="fb-login">
+            <h3>Sign in with <a ng-click="facebookLogin()">Facebook</a></h3>
+        </div>
+        <div class="switch-wrap col-md-5 col-sm-8 col-xs-10">
+            <div class="label col-md-5 col-sm-5 col-xs-5 clickable" ng-click="showRegister = false">Login</div>
+            <div class="switch col-md-2 col-sm-2 col-xs-2 clickable" ng-click="showRegister = !showRegister">
+                <div class="switch-btn" ng-class="{left: !showRegister, right: showRegister}"></div>
+            </div>
+            <div class="label col-md-5 col-sm-5 col-xs-5 clickable" ng-click="showRegister = true">Register</div>
+        </div>
+        <form name="loginForm" ng-show="!showRegister" novalidate>
+            <h2>Login</h2>
+            <div class="form-input">
+                <input type="text" ng-model="login.username" placeholder="Username">
+            </div>
+            <div class="form-input">
+                <input type="password" ng-model="login.password" placeholder="Password">
+            </div>
+            <div class="form-input">
+                <input type="submit" value="Login" ng-click="loginUser(login)">
+            </div>
+        </form>
+        <form class="col-md-10 col-sm-10 col-xs-12" name="registerForm" ng-show="showRegister" novalidate>
+            <h2>Register</h2>
+            <div class="form-input">
+                <input type="text" ng-model="register.firstName" required placeholder="First Name">
+                <input type="text" ng-model="register.lastName" placeholder="Last Name">
+                <input type="email" ng-model="register.email" placeholder="Email Address">
+            </div>
+            <div class="form-input">
+                <h3>Choose Profile Pic:</h3> 
+                <div><input type="file" id="profilePhotoFileUpload" onchange="angular.element(this).scope().setUploadProfilePic()" /></div>
+            </div>
+            <div class="form-input">
+                <input type="text" ng-model="register.display_name" placeholder="Create Display Name">
+                <input type="password" ng-model="register.password" required error-msg="Must create valid password" placeholder="Create Password">
+                <input type="password" ng-model="register.confirm" password-match="{{register.password}}" placeholder="Confirm Password">
+            </div>
+            <div class="form-input">
+                <input type="submit" value="Register" ng-click="registerUser(register)">
+            </div>
+        </form>
+        <a ng-click="showLoginForm = false">- Hide Login Form -</a>
+    </div>
 </body>
 </html>

@@ -1,6 +1,11 @@
-<ul>
-<li menu-link ng-class="{current: menuLink == 1}"><a href="#home">Home</a></li>
-<li menu-link ng-class="{current: menuLink == 2}"><a href="#spotlight">Spotlight</a></li>
-<li ng-class="{current: menuLink == 3}"><a href="/blog" target="_blank">Blog</a></li>
+<ul class="col-md-9 col-sm-12 col-xs-12">
+	<li class="col-md-2 col-sm-2 col-xs-12" menu-link ng-class="{current: menuLink == 1}"><a href="#home">Home</a></li>
+	<li class="col-md-2 col-sm-2 col-xs-12" menu-link ng-class="{current: menuLink == 2}"><a href="#spotlight">Spotlight</a></li>
+	<li class="col-md-2 col-sm-2 col-xs-12"><a href="/blog" target="_blank">Blog</a></li>
+	<li class="col-md-2 col-sm-2 col-xs-12" menu-link ng-class="{current: menuLink == 3}"><a href="#talk">Fan Talk</a></li>
+	<li class="col-md-2 col-sm-2 col-xs-12"><a href="/blog/contact-us/">Contact Us</a></li>
+	<li class="col-md-2 col-sm-2 col-xs-12" ng-show="!user"><a ng-click="showLogin()">Login</a></li>
+	<li class="col-md-2 col-sm-2 col-xs-12" ng-show="user"><a ng-click="logout()">Logout</a></li>
 </ul>
-<h2 class="logo">Fanalytik</h2>
+<h2 class="logo hidden-sm hidden-xs" ng-show="!user">Fanalytik</h2>
+<div class="logo hidden-sm hidden-xs" ng-show="user"><p>{{username}}</p></li>

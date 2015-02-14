@@ -1,35 +1,55 @@
-<menu call-menu="#spot2" ng-include src="'pages/menu.html'"></menu>
+<menu call-menu ng-include src="'pages/menu.html'"></menu>
 <div id="spot2" class="secFull">
 	<div class="videoBox"> 
-		<h1>In The Spotlight</h1>
+		<h1>Spotlight</h1>
 		<hr />
-		<div ng-repeat="vid in videos" id="{{vid.id}}">
-			<h2>Spotlight: {{vid.name}}</h2>
-			<h3>{{vid.date}}</h3>
-			<div class="video">
-				<iframe ng-src="{{trustSrc(vid.link)}}" id="vidFrame" frameborder="0" allowfullscreen></iframe>
+		<div ng-repeat="vid in videos track by $index | limitTo: vidCount" class="video-post" ng-class="{active: showVideoIdx == $index}" id="{{vid.v_id}}" ng-hide="isolateVideo == true && showVideoIdx != $index">
+			<div class="row">
+				<h2>{{vid.title}} ({{vid.date}})</h2>
+				<div ng-show="showVideoIdx == $index">
+					<div class="video">
+						<iframe ng-src="{{trustSrc(vid.link)}}" frameborder="0" allowfullscreen></iframe>
+					</div>
+				</div>
+				<h3>{{vid.caption}}</h3>
+				<a ng-click="setVideoIdx($index)" ng-show="showVideoIdx != $index"><div class="click-help col-md-10 col-sm-10 col-xs-12">Click to watch</div></a>
 			</div>
-			<h3>{{vid.caption}}</h3>
-			<hr />
 		</div>
 		<h3 ng-show="hasMorePosts()"><a ng-click="morePosts()">See More Posts</a></h3>
 	</div>
 	<div class="videoMenu" fixed-scroll="100">
-		<form>
-			<h2>Submit Video/Highlights</h2>
-			<input type="text" placeholder="URL" />
-			<input type="submit" />
+		<h2 class="title">Fanalytik</h2>
+		<div id="videoMenu2" ng-show="!showVideoForm">
+			<h3>Recent Videos</h3>
+			<div ng-repeat="vid in videos track by $index | limitTo: vidCount" class="recent-videos" ng-class="{active: showVideoIdx == $index}">
+				<li><a page-scroll="#{{vid.v_id}}" ng-click="setVideoIdx($index)">
+					{{vid.title}} ({{vid.date}})
+				</a></li>
+			</div>
+		</div>
+		<hr />
+		<div id="videoMenu1" ng-show="!showVideoForm">
+			<p>Got some great highlights that need some public exposure? Send it our way! <a ng-click="showVideoForm = true">Click here</a> to submit.</p>
+		</div>
+		<form ng-show="showVideoForm" name="videoForm" ng-submit="submitVideo()">
+			<h3>Submit Video</h3>
+			<div class="form-input">
+				<input type="text" ng-model="submit.url" required placeholder="URL">
+			</div>
+			<div class="form-input">
+				<input type="text" ng-model="submit.title" required placeholder="Title">
+			</div>
+			<div class="form-input">
+				<input type="email" ng-model="submit.email" placeholder="Email">
+			</div>
+			<div class="form-input">
+				<input type="submit" value="Submit Video" />
+			</div>
+			<div>
+				<a ng-click="showVideoForm = false">Back to videos</a>
+			</div>
 		</form>
 		<hr />
-		<div id="videoMenu2">
-			<h2>Quick Links</h2>
-			<h3 ng-repeat="vid in videos | limitTo: vidCount"><a page-scroll="#{{vid.id}}">{{vid.name}} ({{vid.date}})</a><h3>
-		</div>
-		<hr />
-		<div id="videoMenu3">
-			<h2>Youtube Channel</h2>
-			<h3><a>Go to Channel</a></h3>
-		</div>
 	</div>
 </div>
 		
